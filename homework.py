@@ -13,13 +13,17 @@ TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 CHAT_ID = os.getenv('CHAT_ID')
 
 bot = telegram.Bot(token=TELEGRAM_TOKEN)
-url = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
-headers = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
+URL = 'https://praktikum.yandex.ru/api/user_api/homework_statuses/'
+HEADERS = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
 
 
 def parse_homework_status(homework):
-    homework_name = homework['homework_name']
-    status = homework['status']
+    homework_name = homework.get('homework_name')
+    status = homework.get('status')
+    if homework_name is None:
+        raise KeyError('Неверный ответ сервера')
+    elif status is None:
+        raise KeyError('Неверный ответ сервера')
     if status != 'approved':
         verdict = 'К сожалению, в работе нашлись ошибки.'
     else:
@@ -27,10 +31,14 @@ def parse_homework_status(homework):
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
-def get_homeworks(current_timestamp):
+def get_homeworks(current_timestamp=0):
     payload = {'from_date': current_timestamp}
-    homework_statuses = requests.get(url, headers=headers, params=payload)
-    return homework_statuses.json()
+    try:
+        homework_statuses = requests.get(URL, headers=HEADERS, params=payload)
+        return homework_statuses.json()
+    except Exception as e:
+        logging.exception(f'Бот упал с ошибкой: {e}')
+        send_message(text=logging.exception)
 
 
 def send_message(message):
@@ -48,7 +56,7 @@ def main():
             if len(homeworks.get('homeworks')) == 0:
                 time.sleep(20 * 60)
                 continue
-            homework = homeworks['homeworks'][0]
+            homework = homeworks.get('homeworks')[0]
             message = parse_homework_status(homework)
             send_message(message)
             time.sleep(20 * 60)
