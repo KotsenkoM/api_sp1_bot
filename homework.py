@@ -20,10 +20,8 @@ HEADERS = {'Authorization': f'OAuth {PRAKTIKUM_TOKEN}'}
 def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
     status = homework.get('status')
-    if homework_name is None:
-        raise KeyError('Неверный ответ сервера')
-    elif status is None:
-        raise KeyError('Неверный ответ сервера')
+    if status is None or homework_name is None:
+        return logging.error('Неверный ответ сервера')
     if status != 'approved':
         verdict = 'К сожалению, в работе нашлись ошибки.'
     else:
@@ -31,14 +29,15 @@ def parse_homework_status(homework):
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
-def get_homeworks(current_timestamp=0):
+def get_homeworks(current_timestamp=int(time.time())):
     payload = {'from_date': current_timestamp}
     try:
         homework_statuses = requests.get(URL, headers=HEADERS, params=payload)
         return homework_statuses.json()
-    except Exception as e:
-        logging.exception(f'Бот упал с ошибкой: {e}')
+    except Exception as error:
+        logging.exception(f'Бот упал с ошибкой: {error}')
         send_message(text=logging.exception)
+        return {}
 
 
 def send_message(message):
