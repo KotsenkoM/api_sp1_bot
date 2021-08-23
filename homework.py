@@ -60,8 +60,8 @@ def main():
             send_message(message)
             time.sleep(20 * 60)
 
-        except Exception as e:
-            send_message(f'Бот упал с ошибкой: {e}')
+        except Exception as error:
+            send_message(f'Бот упал с ошибкой: {error}')
             time.sleep(5)
 
 
