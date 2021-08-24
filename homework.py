@@ -21,7 +21,8 @@ def parse_homework_status(homework):
     homework_name = homework.get('homework_name')
     status = homework.get('status')
     if status is None or homework_name is None:
-        return logging.error('Неверный ответ сервера')
+        logging.error('Неверный ответ сервера')
+        return 'Неверный ответ сервера'
     if status != 'approved':
         verdict = 'К сожалению, в работе нашлись ошибки.'
     else:
@@ -29,7 +30,8 @@ def parse_homework_status(homework):
     return f'У вас проверили работу "{homework_name}"!\n\n{verdict}'
 
 
-def get_homeworks(current_timestamp=int(time.time())):
+def get_homeworks(current_timestamp):
+    current_timestamp = current_timestamp or int(time.time())
     payload = {'from_date': current_timestamp}
     try:
         homework_statuses = requests.get(URL, headers=HEADERS, params=payload)
